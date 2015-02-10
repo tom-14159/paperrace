@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Paper Race</title>
+	<script type="text/javascript" src="jquery.js"></script>
+	<script type="text/javascript" src="jquery-ui.js"></script>
+	<script type="text/javascript" src="raphael.js"></script>
+
+	<script>
+
+function Paper(parentId, levelDesc) {
+	this.jq = $("#"+parentId).children().remove().end();
+	this.levelDesc = levelDesc;
+
+	var params = "sizeX sizeY offsetX offsetY gridSize background".split(" ");
+	for (var p in params) {
+		this[ params[p] ] = levelDesc[ params[p] ];
+	}
+
+	this.jq.css("width", this.sizeX+"px")
+		.css("height", this.sizeY+"px")
+		.css("background", "url('"+this.background+"') no-repeat")
+		.draggable({
+			cancel:"svg *",
+			distance:10,
+			start:function(){ $(this).addClass("noclick") }
+		});
+
+	this.svg = Raphael(parentId, this.sizeX, this.sizeY);
+
+	this.paperCoords = function(realCoords) {
+		return {
+			"x":Math.round((realCoords.x-this.offsetX)/this.gridSize),
+			"y":Math.round((realCoords.y-this.offsetY)/this.gridSize)
+		};
+	}
+
+	this.realCoords = function(paperCoords) {
+		return {
+			"x":paperCoords.x*this.gridSize+this.offsetX,
+			"y":paperCoords.y*this.gridSize+this.offsetY
+		}
+	}
+
+	return this;
+}
+
+var levelDesc = {
+	"sizeX"		: 1800,
+	"sizeY"		: 1200,
+	"offsetX"	: 100,
+	"offsetY"	: 100,
+	"gridSize"	: 20,
+	"background"	: "level/masaryk100.png",
+	"start"		: {
+		"1":[{"x":30,"y":45}],
+		"2":[{"x":30,"y":44},{"x":30,"y":46}],
+		"3":[{"x":30,"y":44},{"x":30,"y":45},{"x":30,"y":46}]
+	}
+};
+
+function clickCoords(e) {
+	var element = e.target;
+	var parentOffset = $(element).parent().offset();
+	return {
+		"x":e.pageX-parentOffset.left,
+		"y":e.pageY-parentOffset.top
+	};
+}
+
+var paper;
+$(document).ready(function(){
+	paper = new Paper("context", levelDesc);
+
+	$("div#context").on("mouseup", "svg", function(e){
+		if ( $(this).parents(".noclick").length ) {
+			$(this).parents(".noclick").removeClass("noclick");
+		} else {
+			console.log(paper.paperCoords(clickCoords(e)));
+		}
+	});
+});
+
+	</script>
+</head>
+
+<body>
+	<div id="context">
+	</div>
+</body>
+</html>
