@@ -15,6 +15,7 @@ circle.player, path.player {
 circle.player1, path.player1 { stroke:#800; fill:#800 }
 circle.player2, path.player2 { stroke:#080; fill:#080 }
 circle.player3, path.player3 { stroke:#008; fill:#008 }
+path.removed { stroke:#aaa; stroke-dasharray:"10,5" }
 
 	</style>
 
@@ -86,6 +87,8 @@ function Track(paper, gameDesc) {
 		"svgObject"	: svgObject
 	}];
 
+	this.removedCoords = [];
+
 	this.appendCoords = function(coords) {
 		var startCoords = this.coordList[ this.coordList.length-1 ].coords;
 		var svgObject = this.paper.svg.path(pathString(this.paper.realCoords(startCoords), this.paper.realCoords(startCoords)));
@@ -98,8 +101,17 @@ function Track(paper, gameDesc) {
 		});
 
 		svgObject.animate({"path":pathString(this.paper.realCoords(startCoords), this.paper.realCoords(coords))},500);
+	}
 
-		console.log(this.coordList);
+	this.popCoords = function() {
+		if (this.coordList.length > 1) {
+			var coordObj = this.coordList.pop();
+			$(coordObj.svgObject.node)
+				.attr("class","removed")
+				.attr("stroke-dasharray","10,5")
+				.removeAttr("marker-end");
+			this.removedCoords.push(coordObj);
+		}
 	}
 
 	return this;
