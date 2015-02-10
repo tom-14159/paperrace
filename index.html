@@ -6,6 +6,18 @@
 	<script type="text/javascript" src="jquery-ui.js"></script>
 	<script type="text/javascript" src="raphael.js"></script>
 
+	<style>
+circle.player, path.player {
+	stroke-width: 2;
+	/* fill-opacity: 0; */
+}
+
+circle.player1, path.player1 { stroke:#800; fill:#800 }
+circle.player2, path.player2 { stroke:#080; fill:#080 }
+circle.player3, path.player3 { stroke:#008; fill:#008 }
+
+	</style>
+
 	<script>
 
 function Paper(parentId, levelDesc) {
@@ -42,6 +54,54 @@ function Paper(parentId, levelDesc) {
 		}
 	}
 
+	this.clickPaperCoords = function(e) {
+		var element = e.target;
+		var parentOffset = $(element).parent().offset();
+		return this.paperCoords({
+			"x":e.pageX-parentOffset.left,
+			"y":e.pageY-parentOffset.top
+		});
+	}
+
+	return this;
+}
+
+function pathString(coord1, coord2) {
+	return "M "+coord1.x+" "+coord1.y+" L "+coord2.x+" "+coord2.y;
+}
+
+function Track(paper, gameDesc) {
+	this.playerCount = gameDesc.playerCount;
+	this.playerNo = gameDesc.playerNo;
+	this.paper = paper;
+	this.classString = "player player"+this.playerNo;
+
+	var initCoords = this.paper.levelDesc.start[this.playerCount][this.playerNo-1];
+	var realInitCoords = this.paper.realCoords(initCoords);
+	var svgObject = this.paper.svg.circle(realInitCoords.x, realInitCoords.y, 1.5);
+	$(svgObject.node).attr("class", this.classString);
+
+	this.coordList = [{
+		"coords"	: initCoords,
+		"svgObject"	: svgObject
+	}];
+
+	this.appendCoords = function(coords) {
+		var startCoords = this.coordList[ this.coordList.length-1 ].coords;
+		var svgObject = this.paper.svg.path(pathString(this.paper.realCoords(startCoords), this.paper.realCoords(startCoords)));
+		$(svgObject.node).attr("class", this.classString);
+		$(svgObject.node).attr("marker-end", "url(#marker"+this.playerNo+")");
+
+		this.coordList.push({
+			"coords"	: coords,
+			"svgObject"	: svgObject
+		});
+
+		svgObject.animate({"path":pathString(this.paper.realCoords(startCoords), this.paper.realCoords(coords))},500);
+
+		console.log(this.coordList);
+	}
+
 	return this;
 }
 
@@ -59,24 +119,17 @@ var levelDesc = {
 	}
 };
 
-function clickCoords(e) {
-	var element = e.target;
-	var parentOffset = $(element).parent().offset();
-	return {
-		"x":e.pageX-parentOffset.left,
-		"y":e.pageY-parentOffset.top
-	};
-}
-
 var paper;
+var track;
 $(document).ready(function(){
 	paper = new Paper("context", levelDesc);
+	track = new Track(paper, {"playerCount":1,"playerNo":1});
 
 	$("div#context").on("mouseup", "svg", function(e){
 		if ( $(this).parents(".noclick").length ) {
 			$(this).parents(".noclick").removeClass("noclick");
 		} else {
-			console.log(paper.paperCoords(clickCoords(e)));
+			track.appendCoords(paper.clickPaperCoords(e));
 		}
 	});
 });
@@ -85,6 +138,13 @@ $(document).ready(function(){
 </head>
 
 <body>
+
+	<svg>
+		<marker id="marker1" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player1"/>	</marker>
+		<marker id="marker2" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player2"/>	</marker>
+		<marker id="marker3" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player3"/>	</marker>
+	</svg>
+
 	<div id="context">
 	</div>
 </body>
