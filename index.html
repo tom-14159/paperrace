@@ -7,6 +7,30 @@
 	<script type="text/javascript" src="raphael.js"></script>
 
 	<style>
+div#gameOverlap {
+	background-color: #ddc;
+	border: 1px solid white;
+	box-shadow: 1px 2px 5px #aaa;
+	font-family: sans-serif;
+	left: 1em;
+	padding: 1em;
+	position: fixed;
+	top: 1em;
+}
+
+div#gameOverlap h1 {
+	font-size: medium;
+	margin-top: 0;
+}
+
+div#gameOverlap > div {
+	padding-bottom: 0.2em;
+}
+
+div#gameOverlap a {
+	color: #444;
+}
+
 circle.player, path.player {
 	stroke-width: 2;
 	/* fill-opacity: 0; */
@@ -45,12 +69,14 @@ function Paper(parentId, levelDesc) {
 
 	this.jq.css("width", this.sizeX+"px")
 		.css("height", this.sizeY+"px")
-		.css("background", "url('"+this.background+"') no-repeat")
+		.css("background", "url('"+this.background+"') no-repeat");
+/*
 		.draggable({
 			cancel:"svg *",
 			distance:10,
 			start:function(){ $(this).addClass("noclick") }
 		});
+*/
 
 	this.svg = Raphael(parentId, this.sizeX, this.sizeY);
 
@@ -198,6 +224,7 @@ var levelDesc = {
 	}
 };
 
+/*
 var paper;
 var track;
 $(document).ready(function(){
@@ -214,7 +241,10 @@ $(document).ready(function(){
 			track.turn();
 		}
 	});
+
+	$("html, body").animate({ scrollTop: $(document).height() }, "slow");
 });
+*/
 
 	</script>
 </head>
@@ -227,14 +257,17 @@ $(document).ready(function(){
 		<marker id="marker3" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player3"/>	</marker>
 	</svg>
 
-	<div id="menu">
-	</div>
+	<div id="game" style="display:none">
+		<div id="context">
+		</div>
 
-	<div id="context">
-	</div>
-
-	<div id="gameOverlap">
-		
+		<div id="gameOverlap">
+			<div class="player player1"><strong>Player1</strong> - <span class="moves">0</span></div>
+			<div class="player player2"><strong>Player2</strong> - <span class="moves">0</span></div>
+			<div class="player player3"><strong>Player3</strong> - <span class="moves">0</span></div>
+			<br/>
+			<div><a href="#" data-type="back">Go back</a></div>
+		</div>
 	</div>
 </body>
 </html>
