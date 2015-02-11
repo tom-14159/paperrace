@@ -82,13 +82,6 @@ function Track(paper, gameDesc) {
 	var svgObject = this.paper.svg.circle(realInitCoords.x, realInitCoords.y, 1.5);
 	$(svgObject.node).attr("class", this.classString);
 
-	this.coordList = [{
-		"coords"	: initCoords,
-		"svgObject"	: svgObject
-	}];
-
-	this.removedCoords = [];
-
 	this.appendCoords = function(coords) {
 		var startCoords = this.coordList[ this.coordList.length-1 ].coords;
 		var svgObject = this.paper.svg.path(pathString(this.paper.realCoords(startCoords), this.paper.realCoords(startCoords)));
@@ -129,6 +122,35 @@ function Track(paper, gameDesc) {
 	this.getLength = function() {
 		return (this.coordList.length - 1);
 	}
+
+	this.setClueCoords = function(coords) {
+		var realCoords = this.paper.realCoords(coords);
+		this.clueSet.transform("T"+realCoords.x+","+realCoords.y);
+	}
+
+	this.coordList = [{
+		"coords"	: initCoords,
+		"svgObject"	: svgObject
+	}];
+
+
+	this.removedCoords = [];
+
+	this.clue = {};
+	this.clueSet = this.paper.svg.set();
+	for (var i=-1; i<=1; i++) {
+		this.clue[i] = {};
+		for (var j=-1; j<=1; j++) {
+			var clueCircle = this.paper.svg.circle(
+				i*this.paper.gridSize,
+				j*this.paper.gridSize,
+				this.paper.gridSize*0.4
+			);
+			$(clueCircle.node).attr("class",this.classString);
+			this.clueSet.push(clueCircle);
+		}
+	}
+	this.clueSet.attr("opacity", 0);
 
 	return this;
 }
