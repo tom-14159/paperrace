@@ -114,6 +114,22 @@ function Track(paper, gameDesc) {
 		}
 	}
 
+	this.destroy = function() {
+		while (this.removedCoords.length) {
+			var coordObj = this.removedCoords.pop();
+			coordObj.svgObject.remove();
+		}
+
+		while (this.coordList.length) {
+			var coordObj = this.coordList.pop();
+			coordObj.svgObject.remove();
+		}
+	}
+
+	this.getLength = function() {
+		return (this.coordList.length - 1);
+	}
+
 	return this;
 }
 
@@ -157,7 +173,14 @@ $(document).ready(function(){
 		<marker id="marker3" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player3"/>	</marker>
 	</svg>
 
+	<div id="menu">
+	</div>
+
 	<div id="context">
+	</div>
+
+	<div id="gameOverlap">
+		
 	</div>
 </body>
 </html>
