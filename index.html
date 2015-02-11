@@ -20,6 +20,19 @@ path.removed { stroke:#aaa; stroke-dasharray:"10,5" }
 	</style>
 
 	<script>
+function vectAdd(vectA, vectB) {
+	return {
+		"x": vectA.x + vectB.x,
+		"y": vectA.y + vectB.y
+	};
+}
+
+function vectDir(posA, posB) {
+	return {
+		"x": posA.x - posB.x,
+		"y": posA.y - posB.y
+	};
+}
 
 function Paper(parentId, levelDesc) {
 	this.jq = $("#"+parentId).children().remove().end();
@@ -128,6 +141,22 @@ function Track(paper, gameDesc) {
 		this.clueSet.transform("T"+realCoords.x+","+realCoords.y);
 	}
 
+	this.turn = function() {
+		var currentCoords = this.coordList[ this.coordList.length-1 ].coords;
+		var oldCoords;
+		if (this.coordList.length == 1) {
+			oldCoords = currentCoords;
+		} else {
+			oldCoords = this.coordList[ this.coordList.length-2 ].coords;
+		}
+
+		this.setClueCoords(vectAdd(currentCoords, vectDir(currentCoords, oldCoords)));
+		this.clueShow();
+	}
+
+	this.clueHide = function() { this.clueSet.attr("opacity", 0); }
+	this.clueShow = function() { this.clueSet.animate({"opacity":0.25}, 500); }
+
 	this.coordList = [{
 		"coords"	: initCoords,
 		"svgObject"	: svgObject
@@ -146,11 +175,11 @@ function Track(paper, gameDesc) {
 				j*this.paper.gridSize,
 				this.paper.gridSize*0.4
 			);
-			$(clueCircle.node).attr("class",this.classString);
+			$(clueCircle.node).attr("class","clue "+this.classString);
 			this.clueSet.push(clueCircle);
 		}
 	}
-	this.clueSet.attr("opacity", 0);
+	this.clueHide;
 
 	return this;
 }
@@ -174,12 +203,15 @@ var track;
 $(document).ready(function(){
 	paper = new Paper("context", levelDesc);
 	track = new Track(paper, {"playerCount":1,"playerNo":1});
+	track.turn();
 
-	$("div#context").on("mouseup", "svg", function(e){
+	$("div#context").on("mouseup", "svg .clue", function(e){
 		if ( $(this).parents(".noclick").length ) {
 			$(this).parents(".noclick").removeClass("noclick");
 		} else {
+			track.clueHide();
 			track.appendCoords(paper.clickPaperCoords(e));
+			track.turn();
 		}
 	});
 });
