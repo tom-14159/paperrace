@@ -69,14 +69,12 @@ function Paper(parentId, levelDesc) {
 
 	this.jq.css("width", this.sizeX+"px")
 		.css("height", this.sizeY+"px")
-		.css("background", "url('"+this.background+"') no-repeat");
-/*
+		.css("background", "url('"+this.background+"') no-repeat")
 		.draggable({
 			cancel:"svg *",
 			distance:10,
 			start:function(){ $(this).addClass("noclick") }
 		});
-*/
 
 	this.svg = Raphael(parentId, this.sizeX, this.sizeY);
 
@@ -110,7 +108,8 @@ function pathString(coord1, coord2) {
 	return "M "+coord1.x+" "+coord1.y+" L "+coord2.x+" "+coord2.y;
 }
 
-function Track(paper, gameDesc) {
+function Track(paper, gameDesc, playerName) {
+	this.playerName = playerName;
 	this.playerCount = gameDesc.playerCount;
 	this.playerNo = gameDesc.playerNo;
 	this.paper = paper;
@@ -202,6 +201,7 @@ function Track(paper, gameDesc) {
 				this.paper.gridSize*0.4
 			);
 			$(clueCircle.node).attr("class","clue "+this.classString);
+			clueCircle.attr("opacity",0);
 			this.clueSet.push(clueCircle);
 		}
 	}
@@ -223,6 +223,69 @@ var levelDesc = {
 		"3":[{"x":30,"y":44},{"x":30,"y":45},{"x":30,"y":46}]
 	}
 };
+
+function Game(context, levelDesc, playerCount) {
+	this.paper = new Paper(context, levelDesc);
+	this.context = context;
+	this.playerArr = [];
+	for (var i=1; i<=playerCount; i++) {
+		var track = new Track(this.paper, {"playerCount":playerCount, "playerNo":i}, "Player "+i);
+		this.playerArr.push(track);
+	}
+
+	this.currentPlayer = this.playerArr.shift();
+
+	this.start = function() {
+		var game = this;
+		$("#"+this.context).off("mouseup").on("mouseup", "svg .clue", function(e){
+			if ( $(this).parents(".noclick").length ) {
+				$(this).parents(".noclick").removeClass("noclick");
+			} else {
+				game.turn(game.paper.clickPaperCoords(e));
+			}
+		});
+
+		$("div#gameOverlap").off("click").on("click", "a[data-type=back]", function(e){
+			e.preventDefault();
+			e.stopPropagation();
+
+			game.currentPlayer.popCoords();
+			game.currentPlayer.turn();
+		});
+
+		this.currentPlayer.turn();
+	}
+
+	this.turn = function(coords) {
+		this.currentPlayer.clueHide();
+		this.currentPlayer.appendCoords(coords);
+
+		this.playerArr.push(this.currentPlayer)
+		this.currentPlayer = this.playerArr.shift();
+		this.currentPlayer.turn();
+	}
+
+	return this;
+
+}
+
+var game;
+$(document).ready(function(){
+	$("div#gameSelection").on("click", "a[data-player-count]", function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+
+		var playerCount = $(this).attr("data-player-count");
+		game = new Game("context", levelDesc, playerCount);
+		
+		$("div#gameSelection").hide();
+		$("div#game").show();
+
+		$("html, body").animate({ scrollTop: $(document).height() }, "slow");
+
+		game.start();
+	});
+});
 
 /*
 var paper;
@@ -251,21 +314,29 @@ $(document).ready(function(){
 
 <body>
 
-	<svg>
-		<marker id="marker1" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player1"/>	</marker>
-		<marker id="marker2" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player2"/>	</marker>
-		<marker id="marker3" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player3"/>	</marker>
-	</svg>
+	<div>
+		<svg>
+			<marker id="marker1" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player1"/>	</marker>
+			<marker id="marker2" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player2"/>	</marker>
+			<marker id="marker3" viewBox="0 0 10 10" refX="5" refY="5"><circle cx="5" cy="5" r="3" class="player player3"/>	</marker>
+		</svg>
+	</div>
+
+	<div id="gameSelection">
+		<h1>Start new game</h1>
+		<ul>
+			<li><a href="#" data-player-count="1">1 player</a></li>
+			<li><a href="#" data-player-count="2">2 players</a></li>
+			<li><a href="#" data-player-count="3">3 players</a></li>
+		</ul>
+	</div>
 
 	<div id="game" style="display:none">
 		<div id="context">
 		</div>
 
 		<div id="gameOverlap">
-			<div class="player player1"><strong>Player1</strong> - <span class="moves">0</span></div>
-			<div class="player player2"><strong>Player2</strong> - <span class="moves">0</span></div>
-			<div class="player player3"><strong>Player3</strong> - <span class="moves">0</span></div>
-			<br/>
+			<div data-type="scoreBoard"></div>
 			<div><a href="#" data-type="back">Go back</a></div>
 		</div>
 	</div>
